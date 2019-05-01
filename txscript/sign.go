@@ -199,6 +199,13 @@ func sign(chainParams *chaincfg.Params, tx *wire.MsgTx, idx int,
 		}
 
 		return script, class, addresses, nrequired, nil
+	case ScriptHash256Ty:
+		script, err := sdb.GetScript(addresses[0])
+		if err != nil {
+			return nil, class, nil, 0, err
+		}
+
+		return script, class, addresses, nrequired, nil
 	case MultiSigTy:
 		script, _ := signMultiSig(tx, idx, subScript, hashType,
 			addresses, nrequired, kdb)

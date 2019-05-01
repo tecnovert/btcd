@@ -34,11 +34,14 @@ const (
 	// scriptHashLen is the length of a P2SH script.
 	scriptHashLen = 23
 
+	// scriptHash256Len is the length of a P2SH script.
+	scriptHash256Len = 35
+
 	// witnessV0ScriptHashLen is the length of a P2WSH script.
 	witnessV0ScriptHashLen = 34
 
 	// maxLen is the maximum script length supported by ParsePkScript.
-	maxLen = witnessV0ScriptHashLen
+	maxLen = scriptHash256Len
 )
 
 var (
@@ -88,7 +91,7 @@ func ParsePkScript(pkScript []byte) (PkScript, error) {
 // PkScript struct.
 func isSupportedScriptType(class ScriptClass) bool {
 	switch class {
-	case PubKeyHashTy, WitnessV0PubKeyHashTy, ScriptHashTy,
+	case PubKeyHashTy, WitnessV0PubKeyHashTy, ScriptHashTy, ScriptHash256Ty,
 		WitnessV0ScriptHashTy:
 		return true
 	default:
@@ -117,6 +120,10 @@ func (s PkScript) Script() []byte {
 	case ScriptHashTy:
 		script = make([]byte, scriptHashLen)
 		copy(script, s.script[:scriptHashLen])
+
+	case ScriptHash256Ty:
+		script = make([]byte, scriptHash256Len)
+		copy(script, s.script[:scriptHash256Len])
 
 	case WitnessV0ScriptHashTy:
 		script = make([]byte, witnessV0ScriptHashLen)

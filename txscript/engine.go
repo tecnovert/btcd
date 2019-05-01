@@ -952,7 +952,7 @@ func NewEngine(scriptPubKey []byte, tx *wire.MsgTx, txIdx int, flags ScriptFlags
 		var witProgram []byte
 
 		switch {
-		case isWitnessProgram(vm.scripts[1]):
+		case isWitnessProgram(vm.scripts[1]) || tx.Version >= wire.ParticlTxVersion:
 			// The scriptSig must be *empty* for all native witness
 			// programs, otherwise we introduce malleability.
 			if len(scriptSig) != 0 {
@@ -978,6 +978,30 @@ func NewEngine(scriptPubKey []byte, tx *wire.MsgTx, txIdx int, flags ScriptFlags
 			}
 		}
 
+		if tx.Version >= wire.ParticlTxVersion {
+			vm.witnessVersion = 0
+
+			pops, err := parseScript(witProgram)
+			if err != nil {
+				return nil, err
+			}
+			if isScriptHash256(pops) {
+				// Fit P2SH into P2WSH
+				vm.witnessProgram = pops[1].data
+				vm.tx = *tx
+				vm.txIdx = txIdx
+				vm.SetStack(vm.tx.TxIn[vm.txIdx].Witness)
+			} else
+			if isPubKeyHash(pops) {
+				vm.tx = *tx
+				vm.txIdx = txIdx
+				vm.SetStack(vm.tx.TxIn[vm.txIdx].Witness)
+			} else
+			{
+				errStr := "Unknown script type (Particl)"
+				return nil, scriptError(ErrWitnessUnexpected, errStr)
+			}
+		} else
 		if witProgram != nil {
 			var err error
 			vm.witnessVersion, vm.witnessProgram, err = ExtractWitnessProgramInfo(witProgram)

@@ -296,8 +296,23 @@ func (c *Client) SendRawTransactionAsync(tx *wire.MsgTx, allowHighFees bool) Fut
 		txHex = hex.EncodeToString(buf.Bytes())
 	}
 
+	maxfee := 1
+	// TODO: How to specify different?
+	cmd2 := btcjson.NewSendRawTransactionCmd2(txHex, &maxfee)
+	return c.sendCmd(cmd2)
+	/*
 	cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
-	return c.sendCmd(cmd)
+	// Particl Hack: v19 code
+	rv := c.sendCmd(cmd)
+	_, err := rv
+	if err != nil {
+		maxfee := 1
+		cmd2 := btcjson.NewSendRawTransactionCmd2(txHex, &maxfee)
+		rv = c.sendCmd(cmd2)
+	}
+
+	return rv
+	*/
 }
 
 // SendRawTransaction submits the encoded transaction to the server which will

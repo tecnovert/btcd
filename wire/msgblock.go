@@ -43,6 +43,7 @@ type TxLoc struct {
 type MsgBlock struct {
 	Header       BlockHeader
 	Transactions []*MsgTx
+	BlockSig     []byte
 }
 
 // AddTransaction adds a transaction to the message.
@@ -89,6 +90,13 @@ func (msg *MsgBlock) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) er
 			return err
 		}
 		msg.Transactions = append(msg.Transactions, &tx)
+	}
+
+	if msg.Header.Version >= ParticlBlockVersion {
+		msg.BlockSig, err = ReadVarBytes(r, pver, 96, "blockSig")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -191,6 +199,13 @@ func (msg *MsgBlock) BtcEncode(w io.Writer, pver uint32, enc MessageEncoding) er
 		}
 	}
 
+	if msg.Header.Version >= ParticlBlockVersion {
+		err = WriteVarBytes(w, pver, msg.BlockSig)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -230,6 +245,10 @@ func (msg *MsgBlock) SerializeSize() int {
 	// transactions.
 	n := blockHeaderLen + VarIntSerializeSize(uint64(len(msg.Transactions)))
 
+	if msg.Header.Version == ParticlBlockVersion {
+		n += 32
+	}
+
 	for _, tx := range msg.Transactions {
 		n += tx.SerializeSize()
 	}
@@ -243,6 +262,9 @@ func (msg *MsgBlock) SerializeSizeStripped() int {
 	// Block header bytes + Serialized varint size for the number of
 	// transactions.
 	n := blockHeaderLen + VarIntSerializeSize(uint64(len(msg.Transactions)))
+	if msg.Header.Version == ParticlBlockVersion {
+		n += 32
+	}
 
 	for _, tx := range msg.Transactions {
 		n += tx.SerializeSizeStripped()

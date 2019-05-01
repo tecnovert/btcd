@@ -107,6 +107,9 @@ const (
 // used by Bitcoin applications to differentiate networks as well as addresses
 // and keys for one network from those intended for use on another network.
 type Params struct {
+	// CoinName defines a human-readable identifier for the coin.
+	CoinName string
+
 	// Name defines a human-readable identifier for the network.
 	Name string
 
@@ -223,6 +226,7 @@ type Params struct {
 
 // MainNetParams defines the network parameters for the main Bitcoin network.
 var MainNetParams = Params{
+	CoinName:    "bitcoin",
 	Name:        "mainnet",
 	Net:         wire.MainNet,
 	DefaultPort: "8333",
@@ -325,6 +329,7 @@ var MainNetParams = Params{
 // Bitcoin network.  Not to be confused with the test Bitcoin network (version
 // 3), this network is sometimes simply called "testnet".
 var RegressionNetParams = Params{
+	CoinName:    "bitcoin",
 	Name:        "regtest",
 	Net:         wire.TestNet,
 	DefaultPort: "18444",
@@ -399,6 +404,7 @@ var RegressionNetParams = Params{
 // (version 3).  Not to be confused with the regression test network, this
 // network is sometimes simply called "testnet".
 var TestNet3Params = Params{
+	CoinName:    "bitcoin",
 	Name:        "testnet3",
 	Net:         wire.TestNet3,
 	DefaultPort: "18333",
@@ -496,6 +502,7 @@ var TestNet3Params = Params{
 // following normal discovery rules.  This is important as otherwise it would
 // just turn into another public testnet.
 var SimNetParams = Params{
+	CoinName:    "bitcoin",
 	Name:        "simnet",
 	Net:         wire.SimNet,
 	DefaultPort: "18555",
@@ -566,6 +573,237 @@ var SimNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 115, // ASCII for s
+}
+
+var ParticlMainNetParams = Params{
+	CoinName:    "particl",
+	Name:        "mainnet",
+	Net:         wire.ParticlMainNet,
+	DefaultPort: "51738",
+	DNSSeeds: []DNSSeed{
+		{"mainnet-seed.particl.io", true},
+		{"dnsseed-mainnet.particl.io", true},
+		{"mainnet.particl.io", true},
+	},
+
+	// Chain parameters
+	GenesisBlock:             &particlGenesisBlock,
+	GenesisHash:              &particlGenesisHash,
+	PowLimit:                 mainPowLimit,
+	PowLimitBits:             0x1d00ffff,
+	BIP0034Height:            227931, // 000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8
+	BIP0065Height:            388381, // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+	BIP0066Height:            363725, // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+	CoinbaseMaturity:         100,
+	SubsidyReductionInterval: 210000,
+	TargetTimespan:           time.Hour * 24 * 14, // 14 days
+	TargetTimePerBlock:       time.Minute * 10,    // 10 minutes
+	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
+	ReduceMinDifficulty:      false,
+	MinDiffReductionTime:     0,
+	GenerateSupported:        false,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: []Checkpoint{
+		{421718, newHashFromStr("d22f8acde6c5aed109087eb2799620c560a78e573fa587a1660aef854069d75d")},
+	},
+
+	// Consensus rule change deployments.
+	//
+	// The miner confirmation window is defined as:
+	//   target proof of work timespan / target proof of work spacing
+	RuleChangeActivationThreshold: 1916, // 95% of MinerConfirmationWindow
+	MinerConfirmationWindow:       2016, //
+	Deployments: [DefinedDeployments]ConsensusDeployment{
+		DeploymentTestDummy: {
+			BitNumber:  28,
+			StartTime:  1199145601, // January 1, 2008 UTC
+			ExpireTime: 1230767999, // December 31, 2008 UTC
+		},
+		DeploymentCSV: {
+			BitNumber:  0,
+			StartTime:  1462060800, // May 1st, 2016
+			ExpireTime: 1493596800, // May 1st, 2017
+		},
+		DeploymentSegwit: {
+			BitNumber:  1,
+			StartTime:  1479168000, // November 15, 2016 UTC
+			ExpireTime: 1510704000, // November 15, 2017 UTC.
+		},
+	},
+
+	// Mempool parameters
+	RelayNonStdTxs: false,
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "ph", // always ph for main net
+
+	// Address encoding magics
+	PubKeyHashAddrID:        0x38, // starts with P
+	ScriptHashAddrID:        0x3c,
+	PrivateKeyID:            0x6c,
+	WitnessPubKeyHashAddrID: 0x06, // starts with p2
+	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x88, 0xad, 0xe4}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x04, 0x88, 0xb2, 0x1e}, // starts with xpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 44,
+}
+
+var ParticlRegressionNetParams = Params{
+	CoinName:    "particl",
+	Name:        "regtest",
+	Net:         wire.ParticlRegTest,
+	DefaultPort: "11938",
+	DNSSeeds:    []DNSSeed{},
+
+	// Chain parameters
+	GenesisBlock:             &particlRegTestGenesisBlock,
+	GenesisHash:              &particlRegTestGenesisHash,
+	PowLimit:                 regressionPowLimit,
+	PowLimitBits:             0x207fffff,
+	CoinbaseMaturity:         100,
+	BIP0034Height:            100000000, // Not active - Permit ver 1 blocks
+	BIP0065Height:            1351,      // Used by regression tests
+	BIP0066Height:            1251,      // Used by regression tests
+	SubsidyReductionInterval: 150,
+	TargetTimespan:           time.Hour * 24 * 14, // 14 days
+	TargetTimePerBlock:       time.Minute * 10,    // 10 minutes
+	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
+	ReduceMinDifficulty:      true,
+	MinDiffReductionTime:     time.Minute * 20, // TargetTimePerBlock * 2
+	GenerateSupported:        true,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: nil,
+
+	// Consensus rule change deployments.
+	//
+	// The miner confirmation window is defined as:
+	//   target proof of work timespan / target proof of work spacing
+	RuleChangeActivationThreshold: 108, // 75%  of MinerConfirmationWindow
+	MinerConfirmationWindow:       144,
+	Deployments: [DefinedDeployments]ConsensusDeployment{
+		DeploymentTestDummy: {
+			BitNumber:  28,
+			StartTime:  0,             // Always available for vote
+			ExpireTime: math.MaxInt64, // Never expires
+		},
+		DeploymentCSV: {
+			BitNumber:  0,
+			StartTime:  0,             // Always available for vote
+			ExpireTime: math.MaxInt64, // Never expires
+		},
+		DeploymentSegwit: {
+			BitNumber:  1,
+			StartTime:  0,             // Always available for vote
+			ExpireTime: math.MaxInt64, // Never expires.
+		},
+	},
+
+	// Mempool parameters
+	RelayNonStdTxs: true,
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "tph",
+
+	// Address encoding magics
+	PubKeyHashAddrID: 0x76, // starts with p
+	ScriptHashAddrID: 0x7a,
+	PrivateKeyID:     0x2e, // starts with 9 (uncompressed) or c (compressed)
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with tprv
+	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with tpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 1,
+}
+
+var ParticlTestNetParams = Params{
+	CoinName:    "particl",
+	Name:        "testnet",
+	Net:         wire.ParticlTestNet,
+	DefaultPort: "51938",
+	DNSSeeds: []DNSSeed{
+		{"testnet-seed.particl.io", true},
+		{"dnsseed-testnet.particl.io", true},
+	},
+
+	// Chain parameters
+	GenesisBlock:             &particlTestNetGenesisBlock,
+	GenesisHash:              &particlTestNetGenesisHash,
+	PowLimit:                 mainPowLimit,
+	PowLimitBits:             0x1d00ffff,
+	BIP0034Height:            227931, // 000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8
+	BIP0065Height:            388381, // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+	BIP0066Height:            363725, // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+	CoinbaseMaturity:         100,
+	SubsidyReductionInterval: 210000,
+	TargetTimespan:           time.Hour * 24 * 14, // 14 days
+	TargetTimePerBlock:       time.Minute * 10,    // 10 minutes
+	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
+	ReduceMinDifficulty:      false,
+	MinDiffReductionTime:     0,
+	GenerateSupported:        false,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: []Checkpoint{
+		{375987, newHashFromStr("96bb6bb7085d0fdb85757069af7b1513c6a86b476ba531a67af6e9dd21385255")},
+	},
+
+	// Consensus rule change deployments.
+	//
+	// The miner confirmation window is defined as:
+	//   target proof of work timespan / target proof of work spacing
+	RuleChangeActivationThreshold: 1916, // 95% of MinerConfirmationWindow
+	MinerConfirmationWindow:       2016, //
+	Deployments: [DefinedDeployments]ConsensusDeployment{
+		DeploymentTestDummy: {
+			BitNumber:  28,
+			StartTime:  1199145601, // January 1, 2008 UTC
+			ExpireTime: 1230767999, // December 31, 2008 UTC
+		},
+		DeploymentCSV: {
+			BitNumber:  0,
+			StartTime:  1462060800, // May 1st, 2016
+			ExpireTime: 1493596800, // May 1st, 2017
+		},
+		DeploymentSegwit: {
+			BitNumber:  1,
+			StartTime:  1479168000, // November 15, 2016 UTC
+			ExpireTime: 1510704000, // November 15, 2017 UTC.
+		},
+	},
+
+	// Mempool parameters
+	RelayNonStdTxs: false,
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "tph",
+
+	// Address encoding magics
+	PubKeyHashAddrID:        0x76, // starts with p
+	ScriptHashAddrID:        0x7a,
+	PrivateKeyID:            0x2e,
+	WitnessPubKeyHashAddrID: 0x06, // starts with p2
+	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x88, 0xad, 0xe4}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x04, 0x88, 0xb2, 0x1e}, // starts with xpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 1,
 }
 
 var (
@@ -699,4 +937,8 @@ func init() {
 	mustRegister(&TestNet3Params)
 	mustRegister(&RegressionNetParams)
 	mustRegister(&SimNetParams)
+
+	mustRegister(&ParticlMainNetParams)
+	mustRegister(&ParticlTestNetParams)
+	mustRegister(&ParticlRegressionNetParams)
 }

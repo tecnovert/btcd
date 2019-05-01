@@ -34,7 +34,8 @@ const (
 	// WitnessScaleFactor determines the level of "discount" witness data
 	// receives compared to "base" data. A scale factor of 4, denotes that
 	// witness data is 1/4 as cheap as regular non-witness data.
-	WitnessScaleFactor = 4
+	//WitnessScaleFactor = 4
+	WitnessScaleFactor = 2 // Particl
 
 	// MinTxOutputWeight is the minimum possible weight for a transaction
 	// output.

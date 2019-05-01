@@ -60,6 +60,34 @@ func isScriptHash(pops []parsedOpcode) bool {
 		pops[2].opcode.value == OP_EQUAL
 }
 
+// isScriptHash256 returns true if the script passed is a pay-to-script-256bit-hash
+// transaction, false otherwise.
+func isScriptHash256(pops []parsedOpcode) bool {
+	return len(pops) == 3 &&
+		pops[0].opcode.value == OP_SHA256 &&
+		pops[1].opcode.value == OP_DATA_32 &&
+		pops[2].opcode.value == OP_EQUAL
+}
+
+// isPubKeyHash returns true if the script passed is a pay-to-pubkey-hash
+// transaction, false otherwise.
+func isPubKeyHash(pops []parsedOpcode) bool {
+	return len(pops) == 5 &&
+		pops[0].opcode.value == OP_DUP &&
+		pops[1].opcode.value == OP_HASH160 &&
+		pops[2].opcode.value == OP_DATA_20 &&
+		pops[3].opcode.value == OP_EQUALVERIFY &&
+		pops[4].opcode.value == OP_CHECKSIG
+}
+
+func IsPayToPubKeyHash(script []byte) bool {
+	pops, err := parseScript(script)
+	if err != nil {
+		return false
+	}
+	return isPubKeyHash(pops)
+}
+
 // IsPayToScriptHash returns true if the script is in the standard
 // pay-to-script-hash (P2SH) format, false otherwise.
 func IsPayToScriptHash(script []byte) bool {
@@ -418,7 +446,7 @@ func calcHashSequence(tx *wire.MsgTx) chainhash.Hash {
 func calcHashOutputs(tx *wire.MsgTx) chainhash.Hash {
 	var b bytes.Buffer
 	for _, out := range tx.TxOut {
-		wire.WriteTxOut(&b, 0, 0, out)
+		wire.WriteTxOut(&b, 0, 0, out, true)
 	}
 
 	return chainhash.DoubleHashH(b.Bytes())
@@ -437,7 +465,6 @@ func calcHashOutputs(tx *wire.MsgTx) chainhash.Hash {
 // the produced signature to be invalid.
 func calcWitnessSignatureHash(subScript []parsedOpcode, sigHashes *TxSigHashes,
 	hashType SigHashType, tx *wire.MsgTx, idx int, amt int64) ([]byte, error) {
-
 	// As a sanity check, ensure the passed input index for the transaction
 	// is valid.
 	if idx > len(tx.TxIn)-1 {
@@ -522,7 +549,7 @@ func calcWitnessSignatureHash(subScript []parsedOpcode, sigHashes *TxSigHashes,
 		sigHash.Write(sigHashes.HashOutputs[:])
 	} else if hashType&sigHashMask == SigHashSingle && idx < len(tx.TxOut) {
 		var b bytes.Buffer
-		wire.WriteTxOut(&b, 0, 0, tx.TxOut[idx])
+		wire.WriteTxOut(&b, 0, 0, tx.TxOut[idx], true)
 		sigHash.Write(chainhash.DoubleHashB(b.Bytes()))
 	} else {
 		sigHash.Write(zeroHash[:])

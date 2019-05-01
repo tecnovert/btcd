@@ -640,6 +640,12 @@ type SendRawTransactionCmd struct {
 	AllowHighFees *bool `jsonrpcdefault:"false"`
 }
 
+// SendRawTransactionCmd2 defines the sendrawtransaction JSON-RPC command for v19.
+type SendRawTransactionCmd2 struct {
+	HexTx         string
+	MaxFee        *int  `jsonrpcdefault:"1"`
+}
+
 // NewSendRawTransactionCmd returns a new instance which can be used to issue a
 // sendrawtransaction JSON-RPC command.
 //
@@ -649,6 +655,13 @@ func NewSendRawTransactionCmd(hexTx string, allowHighFees *bool) *SendRawTransac
 	return &SendRawTransactionCmd{
 		HexTx:         hexTx,
 		AllowHighFees: allowHighFees,
+	}
+}
+
+func NewSendRawTransactionCmd2(hexTx string, maxFee *int) *SendRawTransactionCmd2 {
+	return &SendRawTransactionCmd2{
+		HexTx:         hexTx,
+		MaxFee:        maxFee,
 	}
 }
 
@@ -816,7 +829,8 @@ func init() {
 	MustRegisterCmd("preciousblock", (*PreciousBlockCmd)(nil), flags)
 	MustRegisterCmd("reconsiderblock", (*ReconsiderBlockCmd)(nil), flags)
 	MustRegisterCmd("searchrawtransactions", (*SearchRawTransactionsCmd)(nil), flags)
-	MustRegisterCmd("sendrawtransaction", (*SendRawTransactionCmd)(nil), flags)
+	//MustRegisterCmd("sendrawtransaction", (*SendRawTransactionCmd)(nil), flags)
+	MustRegisterCmd("sendrawtransaction", (*SendRawTransactionCmd2)(nil), flags)
 	MustRegisterCmd("setgenerate", (*SetGenerateCmd)(nil), flags)
 	MustRegisterCmd("stop", (*StopCmd)(nil), flags)
 	MustRegisterCmd("submitblock", (*SubmitBlockCmd)(nil), flags)

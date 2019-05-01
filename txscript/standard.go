@@ -55,6 +55,7 @@ const (
 	PubKeyHashTy                             // Pay pubkey hash.
 	WitnessV0PubKeyHashTy                    // Pay witness pubkey hash.
 	ScriptHashTy                             // Pay to script hash.
+	ScriptHash256Ty                          // Pay to script 256bit hash.
 	WitnessV0ScriptHashTy                    // Pay to witness script hash.
 	MultiSigTy                               // Multi signature.
 	NullDataTy                               // Empty data-only (provably prunable).
@@ -68,6 +69,7 @@ var scriptClassToName = []string{
 	PubKeyHashTy:          "pubkeyhash",
 	WitnessV0PubKeyHashTy: "witness_v0_keyhash",
 	ScriptHashTy:          "scripthash",
+	ScriptHash256Ty:       "scripthash256",
 	WitnessV0ScriptHashTy: "witness_v0_scripthash",
 	MultiSigTy:            "multisig",
 	NullDataTy:            "nulldata",
@@ -167,6 +169,8 @@ func typeOfScript(pops []parsedOpcode) ScriptClass {
 		return WitnessV0PubKeyHashTy
 	} else if isScriptHash(pops) {
 		return ScriptHashTy
+	} else if isScriptHash256(pops) {
+		return ScriptHash256Ty
 	} else if isWitnessScriptHash(pops) {
 		return WitnessV0ScriptHashTy
 	} else if isMultiSig(pops) {
@@ -205,6 +209,10 @@ func expectedInputs(pops []parsedOpcode, class ScriptClass) int {
 		return 2
 
 	case ScriptHashTy:
+		// Not including script.  That is handled by the caller.
+		return 1
+
+	case ScriptHash256Ty:
 		// Not including script.  That is handled by the caller.
 		return 1
 
@@ -449,7 +457,9 @@ func PayToAddrScript(addr btcutil.Address) ([]byte, error) {
 			return nil, scriptError(ErrUnsupportedAddress,
 				nilAddrErrStr)
 		}
-		return payToWitnessPubKeyHashScript(addr.ScriptAddress())
+		// Particl
+		return payToPubKeyHashScript(addr.ScriptAddress())
+		//return payToWitnessPubKeyHashScript(addr.ScriptAddress())
 	case *btcutil.AddressWitnessScriptHash:
 		if addr == nil {
 			return nil, scriptError(ErrUnsupportedAddress,
@@ -540,11 +550,29 @@ func ExtractPkScriptAddrs(pkScript []byte, chainParams *chaincfg.Params) (Script
 		// Therefore the pubkey hash is the 3rd item on the stack.
 		// Skip the pubkey hash if it's invalid for some reason.
 		requiredSigs = 1
-		addr, err := btcutil.NewAddressPubKeyHash(pops[2].data,
+
+		// Convert all p2pkh to WitnessV0 addresses for Particl.
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pops[2].data,
 			chainParams)
 		if err == nil {
 			addrs = append(addrs, addr)
 		}
+		/* TODO
+		if chainParams == &chaincfg.ParticlMainNetParams || chainParams == &chaincfg.ParticlTestNetParams || chainParams == &chaincfg.ParticlRegressionNetParams {
+			addr, err := btcutil.NewAddressWitnessPubKeyHash(pops[2].data,
+				chainParams)
+			if err == nil {
+				addrs = append(addrs, addr)
+			}
+		} else
+		{
+			addr, err := btcutil.NewAddressPubKeyHash(pops[2].data,
+				chainParams)
+			if err == nil {
+				addrs = append(addrs, addr)
+			}
+		}
+		*/
 
 	case WitnessV0PubKeyHashTy:
 		// A pay-to-witness-pubkey-hash script is of thw form:
