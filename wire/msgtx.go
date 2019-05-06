@@ -22,6 +22,7 @@ const (
 	OutputTypeCT = 2
 	OutputTypeRingCT = 3
 	OutputTypeData = 4
+	ParticlTxAnonMarket = 0xffffffa0
 
 	// MaxTxInSequenceNum is the maximum sequence number the sequence field
 	// of a transaction input can be.
@@ -218,6 +219,7 @@ type TxIn struct {
 	SignatureScript  []byte
 	Witness          TxWitness
 	Sequence         uint32
+	ScriptData       TxWitness
 }
 
 // SerializeSize returns the number of bytes it would take to serialize the
@@ -1290,7 +1292,30 @@ func readTxIn(r io.Reader, pver uint32, version int32, ti *TxIn) error {
 		return err
 	}
 
-	return readElement(r, &ti.Sequence)
+	err = readElement(r, &ti.Sequence)
+	if err != nil {
+		return err
+	}
+
+	if ti.PreviousOutPoint.Index == ParticlTxAnonMarket {
+		stackCount := uint64(0)
+		stackCount, err = ReadVarInt(r, pver)
+		if err != nil {
+			return err
+		}
+		if stackCount > maxWitnessItemsPerInput {
+			return messageError("readTxIn", "too many ScriptData items")
+		}
+		ti.ScriptData = make([][]byte, stackCount)
+		for j := uint64(0); j < stackCount; j++ {
+			ti.ScriptData[j], err = readScript(r, pver,
+				maxWitnessItemSize, "script data item")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return err
 }
 
 // writeTxIn encodes ti to the bitcoin protocol encoding for a transaction
@@ -1306,7 +1331,18 @@ func writeTxIn(w io.Writer, pver uint32, version int32, ti *TxIn) error {
 		return err
 	}
 
-	return binarySerializer.PutUint32(w, littleEndian, ti.Sequence)
+	err = binarySerializer.PutUint32(w, littleEndian, ti.Sequence)
+	if err != nil {
+		return err
+	}
+
+	if ti.PreviousOutPoint.Index == ParticlTxAnonMarket {
+		err = writeTxWitness(w, pver, version, ti.ScriptData)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 // readTxOut reads the next sequence of bytes from r as a transaction output
@@ -1404,6 +1440,8 @@ func WriteTxOut(w io.Writer, pver uint32, version int32, to *TxOut, doWitness bo
 		}
 		if doWitness {
 			err = WriteVarBytes(w, pver, to.RangeProof)
+		} else {
+			err = WriteVarInt(w, pver, 0)
 		}
 		return err
 	} else
@@ -1428,7 +1466,8 @@ func WriteTxOut(w io.Writer, pver uint32, version int32, to *TxOut, doWitness bo
 	if to.Version == OutputTypeData {
 		return WriteVarBytes(w, pver, to.Data)
 	}
-	return messageError("WriteTxOut", "Invalid outputType")
+	str := fmt.Sprintf("Invalid outputType: %d", to.Version)
+	return messageError("WriteTxOut", str)
 }
 
 // writeTxWitness encodes the bitcoin protocol encoding for a transaction
