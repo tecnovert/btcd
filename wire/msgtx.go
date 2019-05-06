@@ -1364,7 +1364,8 @@ func readTxOut(r io.Reader, pver uint32, version int32, to *TxOut) error {
 			"transaction output data")
 		return err
 	}
-	return messageError("readTxOut", "Invalid outputType")
+	str := fmt.Sprintf("Invalid outputType: %d", to.Version)
+	return messageError("readTxOut", str)
 }
 
 // WriteTxOut encodes to into the bitcoin protocol encoding for a transaction
