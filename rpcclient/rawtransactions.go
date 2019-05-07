@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -296,29 +297,36 @@ func (c *Client) SendRawTransactionAsync(tx *wire.MsgTx, allowHighFees bool) Fut
 		txHex = hex.EncodeToString(buf.Bytes())
 	}
 
-	maxfee := 1
-	// TODO: How to specify different?
-	cmd2 := btcjson.NewSendRawTransactionCmd2(txHex, &maxfee)
-	return c.sendCmd(cmd2)
-	/*
 	cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
-	// Particl Hack: v19 code
-	rv := c.sendCmd(cmd)
-	_, err := rv
-	if err != nil {
-		maxfee := 1
-		cmd2 := btcjson.NewSendRawTransactionCmd2(txHex, &maxfee)
-		rv = c.sendCmd(cmd2)
+	return c.sendCmd(cmd)
+}
+
+func (c *Client) SendRawTransaction2Async(tx *wire.MsgTx, maxFee float64) FutureSendRawTransactionResult {
+	txHex := ""
+	if tx != nil {
+		// Serialize the transaction and convert to hex string.
+		buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+		if err := tx.Serialize(buf); err != nil {
+			return newFutureError(err)
+		}
+		txHex = hex.EncodeToString(buf.Bytes())
 	}
 
-	return rv
-	*/
+	cmd2 := btcjson.NewSendRawTransactionCmd2(txHex, &maxFee)
+	return c.sendCmd(cmd2)
 }
 
 // SendRawTransaction submits the encoded transaction to the server which will
 // then relay it to the network.
 func (c *Client) SendRawTransaction(tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error) {
-	return c.SendRawTransactionAsync(tx, allowHighFees).Receive()
+	hash, err := c.SendRawTransactionAsync(tx, allowHighFees).Receive()
+	// Particl Hack, v19 allowHighFees -> maxFee
+	if err != nil && strings.Contains(err.Error(), "Second argument must be numeric" ) {
+		maxFee := 1.0
+		hash, err = c.SendRawTransaction2Async(tx, maxFee).Receive()
+	}
+
+	return hash, err
 }
 
 // FutureSignRawTransactionResult is a future promise to deliver the result
