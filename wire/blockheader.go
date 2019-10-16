@@ -17,6 +17,10 @@ import (
 // PrevBlock and MerkleRoot hashes.
 const MaxBlockHeaderPayload = 16 + (chainhash.HashSize * 2)
 
+const (
+	ParticlBlockVersion = 0xa0
+)
+
 // BlockHeader defines information about a block and is used in the bitcoin
 // block (MsgBlock) and headers (MsgHeaders) messages.
 type BlockHeader struct {
@@ -28,6 +32,10 @@ type BlockHeader struct {
 
 	// Merkle tree reference to hash of all transactions for the block.
 	MerkleRoot chainhash.Hash
+
+	// Merkle tree reference to hash of all transactions for the block.
+	WitnessMerkleRoot chainhash.Hash // Particl
+
 
 	// Time the block was created.  This is, unfortunately, encoded as a
 	// uint32 on the wire and therefore is limited to 2106.
@@ -114,8 +122,25 @@ func NewBlockHeader(version int32, prevHash, merkleRootHash *chainhash.Hash,
 // decoding block headers stored to disk, such as in a database, as opposed to
 // decoding from the wire.
 func readBlockHeader(r io.Reader, pver uint32, bh *BlockHeader) error {
-	return readElements(r, &bh.Version, &bh.PrevBlock, &bh.MerkleRoot,
-		(*uint32Time)(&bh.Timestamp), &bh.Bits, &bh.Nonce)
+	err := readElement(r, &bh.Version)
+	if err != nil {
+		return err
+	}
+	err = readElement(r, &bh.PrevBlock)
+	if err != nil {
+		return err
+	}
+	err = readElement(r, &bh.MerkleRoot)
+	if err != nil {
+		return err
+	}
+	if bh.Version == ParticlBlockVersion {
+		err = readElement(r, &bh.WitnessMerkleRoot)
+		if err != nil {
+			return err
+		}
+	}
+	return readElements(r, (*uint32Time)(&bh.Timestamp), &bh.Bits, &bh.Nonce)
 }
 
 // writeBlockHeader writes a bitcoin block header to w.  See Serialize for
@@ -123,6 +148,10 @@ func readBlockHeader(r io.Reader, pver uint32, bh *BlockHeader) error {
 // opposed to encoding for the wire.
 func writeBlockHeader(w io.Writer, pver uint32, bh *BlockHeader) error {
 	sec := uint32(bh.Timestamp.Unix())
+	if bh.Version == ParticlBlockVersion {
+		return writeElements(w, bh.Version, &bh.PrevBlock, &bh.MerkleRoot, &bh.WitnessMerkleRoot,
+			sec, bh.Bits, bh.Nonce)
+	}
 	return writeElements(w, bh.Version, &bh.PrevBlock, &bh.MerkleRoot,
 		sec, bh.Bits, bh.Nonce)
 }

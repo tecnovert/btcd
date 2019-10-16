@@ -170,3 +170,73 @@ var simNetGenesisBlock = wire.MsgBlock{
 	},
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
+
+
+var particlGenesisCoinbaseTx = genesisCoinbaseTx
+
+var particlGenesisHash = chainhash.Hash([chainhash.HashSize]byte{ // Make go vet happy.
+	0x4c, 0xcf, 0xec, 0x66, 0x68, 0xd6, 0x24, 0xb9,
+	0x0b, 0x8e, 0x99, 0xc3, 0x5d, 0x82, 0xb8, 0xc7,
+	0xb8, 0xdd, 0x2f, 0xe2, 0x23, 0x56, 0xc9, 0x7a,
+	0x31, 0x95, 0xc1, 0x84, 0x07, 0xee, 0x00, 0x00,
+})
+
+var particlGenesisMerkleRoot = genesisMerkleRoot
+
+var particlGenesisBlock = wire.MsgBlock{
+	Header: wire.BlockHeader{
+		Version:    1,
+		PrevBlock:  chainhash.Hash{},          // 0000000000000000000000000000000000000000000000000000000000000000
+		MerkleRoot: testNet3GenesisMerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+		Timestamp:  time.Unix(1296688602, 0),  // 2011-02-02 23:16:42 +0000 UTC
+		Bits:       0x1d00ffff,                // 486604799 [00000000ffff0000000000000000000000000000000000000000000000000000]
+		Nonce:      0x18aea41a,                // 414098458
+	},
+	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
+}
+
+var particlTestNetGenesisCoinbaseTx = genesisCoinbaseTx
+
+var particlTestNetGenesisHash = chainhash.Hash([chainhash.HashSize]byte{ // Make go vet happy.
+	0x90, 0x7c, 0xec, 0xa7, 0x04, 0xa9, 0xd6, 0xc7,
+	0xcd, 0x33, 0x4e, 0xea, 0x50, 0x58, 0xbd, 0x0b,
+	0x3d, 0xfa, 0xd4, 0xaf, 0xe0, 0x3e, 0x44, 0x67,
+	0xb3, 0x10, 0x53, 0xda, 0x4a, 0x59, 0x00, 0x00,
+})
+
+var particlTestNetGenesisMerkleRoot = genesisMerkleRoot
+
+var particlTestNetGenesisBlock = wire.MsgBlock{
+	Header: wire.BlockHeader{
+		Version:    1,
+		PrevBlock:  chainhash.Hash{},          // 0000000000000000000000000000000000000000000000000000000000000000
+		MerkleRoot: particlTestNetGenesisMerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+		Timestamp:  time.Unix(1296688602, 0),  // 2011-02-02 23:16:42 +0000 UTC
+		Bits:       0x1d00ffff,                // 486604799 [00000000ffff0000000000000000000000000000000000000000000000000000]
+		Nonce:      0x18aea41a,                // 414098458
+	},
+	Transactions: []*wire.MsgTx{&particlTestNetGenesisCoinbaseTx},
+}
+
+var particlRegTestGenesisCoinbaseTx = genesisCoinbaseTx
+
+var particlRegTestGenesisHash = chainhash.Hash([chainhash.HashSize]byte{ // Make go vet happy.
+	0x07, 0x59, 0xf2, 0x98, 0x70, 0x86, 0x66, 0xf8,
+	0x4c, 0xe2, 0x2e, 0x6f, 0x58, 0xf6, 0xff, 0x08,
+	0xe5, 0x8a, 0xb9, 0x16, 0xde, 0x8f, 0x3b, 0xfa,
+	0x5b, 0xda, 0x0a, 0x6c, 0x53, 0x74, 0xd1, 0x6c,
+})
+
+var particlRegTestGenesisMerkleRoot = genesisMerkleRoot
+
+var particlRegTestGenesisBlock = wire.MsgBlock{
+	Header: wire.BlockHeader{
+		Version:    1,
+		PrevBlock:  chainhash.Hash{},          // 0000000000000000000000000000000000000000000000000000000000000000
+		MerkleRoot: particlRegTestGenesisMerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+		Timestamp:  time.Unix(1296688602, 0),  // 2011-02-02 23:16:42 +0000 UTC
+		Bits:       0x1d00ffff,                // 486604799 [00000000ffff0000000000000000000000000000000000000000000000000000]
+		Nonce:      0x18aea41a,                // 414098458
+	},
+	Transactions: []*wire.MsgTx{&particlRegTestGenesisCoinbaseTx},
+}

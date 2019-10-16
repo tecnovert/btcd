@@ -24,7 +24,7 @@ const (
 
 	// MaxBlockBaseSize is the maximum number of bytes within a block
 	// which can be allocated to non-witness data.
-	MaxBlockBaseSize = 1000000
+	MaxBlockBaseSize = 2000000 // Particl
 
 	// MaxBlockSigOpsCost is the maximum number of signature operations
 	// allowed for a block. It is calculated via a weighted algorithm which
@@ -34,7 +34,7 @@ const (
 	// WitnessScaleFactor determines the level of "discount" witness data
 	// receives compared to "base" data. A scale factor of 4, denotes that
 	// witness data is 1/4 as cheap as regular non-witness data.
-	WitnessScaleFactor = 4
+	WitnessScaleFactor = 2 // Particl
 
 	// MinTxOutputWeight is the minimum possible weight for a transaction
 	// output.
