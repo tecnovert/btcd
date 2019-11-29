@@ -262,12 +262,6 @@ func RegisterCmd(method string, cmd interface{}, flags UsageFlag) error {
 		defaults:     defaults,
 		flags:        flags,
 	}
-
-	// Particl Hack
-	if strings.HasSuffix(method, "_v2") {
-		method = method[0:len(method)-3]
-	}
-
 	concreteTypeToMethod[rtp] = method
 	return nil
 }
